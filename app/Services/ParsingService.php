@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\NameParserInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -15,7 +16,7 @@ use InvalidArgumentException;
  * (multiple people), and various title formats. Validates input and logs errors
  * for invalid records.
  */
-class ParsingService
+class ParsingService implements NameParserInterface
 {
     /**
      * Valid title patterns for homeowner names.

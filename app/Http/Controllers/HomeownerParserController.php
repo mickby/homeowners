@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Contracts\NameParserInterface;
 use App\Http\Requests\StoreHomeOwnersRequest;
-use App\Services\ParsingService;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -23,10 +23,10 @@ class HomeownerParserController extends Controller
      * as a JSON response.
      *
      * @param StoreHomeOwnersRequest $request Validated request containing CSV file
-     * @param ParsingService $parser Service for parsing homeowner names
+     * @param NameParserInterface $parser Service for parsing homeowner names
      * @return JsonResponse JSON response containing parsed homeowner data
      */
-    public function __invoke(StoreHomeOwnersRequest $request, ParsingService $parser): JsonResponse
+    public function __invoke(StoreHomeOwnersRequest $request, NameParserInterface $parser): JsonResponse
     {
         $file = $request->file('csv_file');
 
