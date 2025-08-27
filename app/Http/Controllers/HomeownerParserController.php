@@ -28,9 +28,18 @@ class HomeownerParserController extends Controller
      */
     public function __invoke(StoreHomeOwnersRequest $request, ParsingService $parser): JsonResponse
     {
-        $file = $request['csv_file'];
-        $handle = fopen($file->getPathname(), 'r');
+        $file = $request->file('csv_file');
 
+        if (!$file || !$file->isValid()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid CSV file upload'
+            ], 400);
+        }
+
+        $homeowners = [];
+
+        $handle = fopen($file->getPathname(), 'r');
         if ($handle === false) {
             return response()->json([
                 'success' => false,
@@ -38,17 +47,19 @@ class HomeownerParserController extends Controller
             ], 400);
         }
 
-        // Skip the header row
-        fgetcsv($handle);
+        try {
+            // Skip the header row
+            fgetcsv($handle);
 
-        $homeowners = [];
-        while (($row = fgetcsv($handle)) !== false) {
-            if (!empty(trim($row[0]))) {
-                $homeowners = array_merge($homeowners, $parser->parseHomeowner($row[0]));
+            while (($row = fgetcsv($handle)) !== false) {
+                $name = trim($row[0] ?? '');
+                if ($name !== '') {
+                    array_push($homeowners, ...$parser->parseHomeowner($name));
+                }
             }
+        } finally {
+            fclose($handle);
         }
-
-        fclose($handle);
 
         return response()->json([
             'success' => true,
