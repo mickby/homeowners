@@ -28,14 +28,24 @@ class ParsingService
         $cleanName = preg_replace('/(and|&)\s+/', '', $cleanName);
         $cleanName = trim($cleanName);
         
-        // For "Mr and Mrs Smith", the clean name should be just "Smith"
-        $lastName = $cleanName;
+        // Parse the remaining name parts
+        $nameParts = explode(' ', $cleanName);
+        
+        if (count($nameParts) === 1) {
+            // Only last name (e.g., "Mr and Mrs Smith")
+            $firstName = null;
+            $lastName = $nameParts[0];
+        } else {
+            // First name and last name (e.g., "Dr & Mrs Joe Bloggs")
+            $firstName = $nameParts[0];
+            $lastName = $nameParts[1];
+        }
         
         // Create person records for each title
         foreach ($titles as $title) {
             $people[] = [
                 'title' => $title,
-                'first_name' => null,
+                'first_name' => $firstName,
                 'initial' => null,
                 'last_name' => $lastName
             ];

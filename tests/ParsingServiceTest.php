@@ -4,8 +4,9 @@ namespace Tests;
 
 use App\Services\ParsingService;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
- class ParsingServiceTest extends BaseTestCase
+class ParsingServiceTest extends BaseTestCase
 {
     public function test_basic_name_parsing(): void
     {
@@ -20,29 +21,53 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
         ]], $result);
     }
 
-    public function test_multiple_people_parsing(): void
+    #[DataProvider('multiplePersonDataProvider')]
+    public function test_multiple_people_parsing(string $input, array $expected): void
     {
         $parser = new ParsingService();
 
-        $result = $parser->parseHomeowner("Mr and Mrs Smith");
-        #should return two records, assert both
-        $expected = [
-            [
-                'title' => 'Mr',
-                'first_name' => null,
-                'initial' => null,
-                'last_name' => 'Smith'
+        $result = $parser->parseHomeowner($input);
+        $this->assertEquals($expected, $result);
+    }
+
+    public static function multiplePersonDataProvider(): array
+    {
+        return [
+            'Mr and Mrs Smith' => [
+                'input' => 'Mr and Mrs Smith',
+                'expected' => [
+                    [
+                        'title' => 'Mr',
+                        'first_name' => null,
+                        'initial' => null,
+                        'last_name' => 'Smith'
+                    ],
+                    [
+                        'title' => 'Mrs',
+                        'first_name' => null,
+                        'initial' => null,
+                        'last_name' => 'Smith'
+                    ]
+                ]
             ],
-            [
-                'title' => 'Mrs',
-                'first_name' => null,
-                'initial' => null,
-                'last_name' => 'Smith'
+            'Dr & Mrs Joe Bloggs' => [
+                'input' => 'Dr & Mrs Joe Bloggs',
+                'expected' => [
+                    [
+                        'title' => 'Dr',
+                        'first_name' => 'Joe',
+                        'initial' => null,
+                        'last_name' => 'Bloggs'
+                    ],
+                    [
+                        'title' => 'Mrs',
+                        'first_name' => 'Joe',
+                        'initial' => null,
+                        'last_name' => 'Bloggs'
+                    ]
+                ]
             ]
         ];
-        $this->assertEquals($expected, $result);
-
-
     }
 
 
