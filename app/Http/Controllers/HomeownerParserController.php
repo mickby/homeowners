@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHomeOwnersRequest;
+use App\Services\ParsingService;
 
 
 class HomeownerParserController extends Controller
@@ -10,7 +11,7 @@ class HomeownerParserController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(StoreHomeOwnersRequest $request)
+    public function __invoke(StoreHomeOwnersRequest $request, ParsingService $parser)
     {
 
         $file = $request['csv_file'];
@@ -21,7 +22,7 @@ class HomeownerParserController extends Controller
         $homeowners = [];
         while (($row = fgetcsv($handle)) !== false) {
             if (!empty(trim($row[0]))) {
-                $homeowners[] = $this->parseHomeowner(trim($row[0]));
+                $homeowners[] = $parser->parseHomeowner(trim($row[0]));
             }
         }
 
@@ -34,28 +35,5 @@ class HomeownerParserController extends Controller
         ]);
     }
 
-    private function parseHomeowner(string $name): array
-    {
-        // Extract title
-        $title = "";
-        if (preg_match_all('/(Mr|Mrs|Ms|Dr|Prof|Mister)\.?\s+/', $name, $matches)) {
-            $title = $matches[1][0];
-        }
 
-
-        // Extract names without titles
-        $cleanName = preg_replace('/(Mr|Mrs|Ms|Dr|Prof|Mister)\.?\s+/i', '', $name);
-        $cleanName = trim($cleanName);
-        $parts = explode(' ', trim($cleanName, ','));
-
-
-         $parsed = [
-                    'title' => $title,
-                    'first_name' => $parts[0],
-                    'initial' => null,
-                    'last_name' => $parts[1],
-                ];
-
-            return $parsed;
-    }
 }

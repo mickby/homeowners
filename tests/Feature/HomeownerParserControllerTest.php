@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Tests\TestCase;
+use Tests\ParsingServiceTest;
 
-class HomeownerParserControllerTest extends TestCase
+class HomeownerParserControllerTest extends ParsingServiceTest
 {
     use RefreshDatabase;
 

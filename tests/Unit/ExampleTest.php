@@ -3,9 +3,9 @@
 namespace Tests\Unit;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Tests\ParsingServiceTest;
 
-class ExampleTest extends TestCase
+class ExampleTest extends ParsingServiceTest
 {
     use RefreshDatabase;
 
