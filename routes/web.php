@@ -7,4 +7,4 @@ Route::get('/', function () {
     return view('homeowner-parser');
 })->name('home');
 
-Route::post('/', HomeownerParserController::class)->name('parse');
+Route::post('/parse', HomeownerParserController::class)->name('parse');

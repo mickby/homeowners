@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Homeowner Names Parser</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -66,7 +67,6 @@
                                                 <th>First Name</th>
                                                 <th>Initial</th>
                                                 <th>Last Name</th>
-                                                <th>Original Input</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -75,7 +75,6 @@
                                                 <td>@{{ person.first_name || '-' }}</td>
                                                 <td>@{{ person.initial || '-' }}</td>
                                                 <td>@{{ person.last_name || '-' }}</td>
-                                                <td class="text-muted">@{{ person.original_input }}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -114,11 +113,12 @@
                     error.value = null
                     
                     try {
-                        const response = await fetch('/api/parse-homeowners', {
+                        const response = await fetch('/parse', {
                             method: 'POST',
                             body: formData,
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                             }
                         })
                         
@@ -128,7 +128,7 @@
                             throw new Error(data.message || 'An error occurred while processing the file.')
                         }
                         
-                        results.value = data.results || []
+                        results.value = data.homeowners || []
                     } catch (err) {
                         error.value = err.message
                     } finally {
