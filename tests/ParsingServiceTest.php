@@ -1,15 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use App\Services\ParsingService;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Log;
-use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+/**
+ * Test suite for the ParsingService class.
+ */
 class ParsingServiceTest extends BaseTestCase
 {
+    /**
+     * Test parsing a basic single person name with title.
+     */
     public function test_basic_name_parsing(): void
     {
         $parser = new ParsingService();
@@ -23,6 +30,9 @@ class ParsingServiceTest extends BaseTestCase
         ]], $result);
     }
 
+    /**
+     * Test parsing multiple people compound names.
+     */
     #[DataProvider('multiplePersonDataProvider')]
     public function test_multiple_people_parsing(string $input, array $expected): void
     {
@@ -32,6 +42,11 @@ class ParsingServiceTest extends BaseTestCase
         $this->assertEquals($expected, $result);
     }
 
+    /**
+     * Data provider for multiple person parsing test cases.
+     *
+     * @return array<string, array{input: string, expected: array<int, array{title: string, first_name: string|null, initial: string|null, last_name: string}>}>
+     */
     public static function multiplePersonDataProvider(): array
     {
         return [
@@ -72,21 +87,19 @@ class ParsingServiceTest extends BaseTestCase
         ];
     }
 
+    /**
+     * Test that names missing required fields are skipped and logged.
+     */
     public function test_missing_required_fields_skipped_and_logged(): void
     {
-
         $parser = new ParsingService();
 
         Log::shouldReceive('error')
             ->once()
             ->with('Name must contain a valid title');
 
-
         $result = $parser->parseHomeowner("John");
 
         $this->assertSame([], $result);
-
     }
-
-
 }

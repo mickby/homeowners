@@ -1,19 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
+/**
+ * Service for parsing homeowner names from various formats.
+ *
+ * Handles parsing of homeowner names including single persons, compound names
+ * (multiple people), and various title formats. Validates input and logs errors
+ * for invalid records.
+ */
 class ParsingService
 {
+    /**
+     * Valid title patterns for homeowner names.
+     */
+    private const VALID_TITLES = 'Mr|Mrs|Ms|Dr|Prof|Mister';
+    /**
+     * Parse a homeowner name string into structured data.
+     *
+     * Processes homeowner names in various formats including single persons
+     * and compound names (e.g., "Mr and Mrs Smith"). Returns structured data
+     * with separate records for each person found.
+     *
+     * @param string $name The homeowner name to parse
+     * @return array<int, array{title: string, first_name: string|null, initial: string|null, last_name: string}> Array of parsed person records
+     */
     public function parseHomeowner(string $name): array
     {
         try {
             $this->validateRecord($name);
-        } catch (InvalidArgumentException $e){
-          Log::error($e->getMessage()); # log and continue
-          return [];
+        } catch (InvalidArgumentException $e) {
+            Log::error($e->getMessage());
+            return [];
         }
 
         // Check for compound names (multiple people)
@@ -25,15 +48,22 @@ class ParsingService
         return $this->parseSinglePerson($name);
     }
 
+    /**
+     * Validate that a homeowner record contains required fields.
+     *
+     * Ensures the name is not empty, contains a valid title, and has
+     * sufficient components for parsing.
+     *
+     * @param string $name The name to validate
+     * @throws InvalidArgumentException When validation fails
+     */
     private function validateRecord(string $name): void
     {
-        #title and last name are required
-
         if (empty(trim($name))) {
             throw new InvalidArgumentException("Name cannot be empty");
         }
 
-        if (!preg_match('/(Mr|Mrs|Ms|Dr|Prof|Mister)/i', $name)) {
+        if (!preg_match('/(' . self::VALID_TITLES . ')/i', $name)) {
             throw new InvalidArgumentException("Name must contain a valid title");
         }
 
@@ -42,22 +72,27 @@ class ParsingService
         if (count($parts) < 2) {
             throw new InvalidArgumentException("Name must contain at least two words");
         }
-
-
-
-
     }
 
+    /**
+     * Parse compound names containing multiple people.
+     *
+     * Handles names like "Mr and Mrs Smith" or "Dr & Mrs Joe Bloggs",
+     * extracting individual person records for each title found.
+     *
+     * @param string $name The compound name to parse
+     * @return array<int, array{title: string, first_name: string|null, initial: string|null, last_name: string}> Array of person records
+     */
     private function parseCompoundName(string $name): array
     {
         $people = [];
 
         // Extract all titles
-        preg_match_all('/(Mr|Mrs|Ms|Dr|Prof|Mister)\.?\s+/', $name, $matches);
+        preg_match_all('/(' . self::VALID_TITLES . ')\.?\s+/', $name, $matches);
         $titles = $matches[1] ?? [];
 
         // Remove titles first, then remove "and" or "&"
-        $cleanName = preg_replace('/(Mr|Mrs|Ms|Dr|Prof|Mister)\.?\s+/i', '', $name);
+        $cleanName = preg_replace('/(' . self::VALID_TITLES . ')\.?\s+/i', '', $name);
         $cleanName = preg_replace('/(and|&)\s+/', '', $cleanName);
         $cleanName = trim($cleanName);
 
@@ -87,16 +122,25 @@ class ParsingService
         return $people;
     }
 
+    /**
+     * Parse a single person name.
+     *
+     * Handles individual names like "Mr John Smith", extracting the title,
+     * first name, and last name components.
+     *
+     * @param string $name The single person name to parse
+     * @return array<int, array{title: string, first_name: string|null, initial: string|null, last_name: string}> Array containing single person record
+     */
     private function parseSinglePerson(string $name): array
     {
         // Extract title
         $title = "";
-        if (preg_match('/(Mr|Mrs|Ms|Dr|Prof|Mister)\.?\s+/', $name, $matches)) {
+        if (preg_match('/(' . self::VALID_TITLES . ')\.?\s+/', $name, $matches)) {
             $title = $matches[1];
         }
 
         // Extract names without titles
-        $cleanName = preg_replace('/(Mr|Mrs|Ms|Dr|Prof|Mister)\.?\s+/i', '', $name);
+        $cleanName = preg_replace('/(' . self::VALID_TITLES . ')\.?\s+/i', '', $name);
         $cleanName = trim($cleanName);
         $parts = explode(' ', trim($cleanName, ','));
 

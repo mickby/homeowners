@@ -1,15 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\ParsingServiceTest;
 
 class HomeownerParserControllerTest extends ParsingServiceTest
 {
-    use RefreshDatabase;
-
     public function test_parse_route_returns_correct_array(): void
     {
     $csvContent = "homeowner,
@@ -23,7 +22,7 @@ class HomeownerParserControllerTest extends ParsingServiceTest
             'csv_file' => $file
         ]);
 
-        $response->assertStatus(200);
+        $response->assertSuccessful();
         $response->assertJson([
             'success' => true,
             'count' => 2,
@@ -45,7 +44,4 @@ class HomeownerParserControllerTest extends ParsingServiceTest
     }
 
 }
-
-
-
 
