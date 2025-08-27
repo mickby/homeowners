@@ -22,7 +22,7 @@ class HomeownerParserController extends Controller
         $homeowners = [];
         while (($row = fgetcsv($handle)) !== false) {
             if (!empty(trim($row[0]))) {
-                $homeowners[] = $parser->parseHomeowner(trim($row[0]));
+                $homeowners = array_merge($homeowners, $parser->parseHomeowner($row[0]));
             }
         }
 

@@ -4,6 +4,8 @@ namespace Tests;
 
 use App\Services\ParsingService;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ParsingServiceTest extends BaseTestCase
@@ -12,9 +14,9 @@ class ParsingServiceTest extends BaseTestCase
     {
         $parser = new ParsingService();
 
-        $result = $parser->parseHomeowner("John Smith");
+        $result = $parser->parseHomeowner("Mr John Smith");
         $this->assertEquals([[
-            'title' => '',
+            'title' => 'Mr',
             'first_name' => 'John',
             'initial' => null,
             'last_name' => 'Smith'
@@ -68,6 +70,22 @@ class ParsingServiceTest extends BaseTestCase
                 ]
             ]
         ];
+    }
+
+    public function test_missing_required_fields_skipped_and_logged(): void
+    {
+
+        $parser = new ParsingService();
+
+        Log::shouldReceive('error')
+            ->once()
+            ->with('Name must contain a valid title');
+
+
+        $result = $parser->parseHomeowner("John");
+
+        $this->assertSame([], $result);
+
     }
 
 
