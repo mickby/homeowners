@@ -19,8 +19,8 @@ class HomeownerParserController extends Controller
     /**
      * Parse homeowner data from uploaded CSV file.
      *
-     * Processes an uploaded CSV file containing homeowner records, parses each entry
-     * using the ParsingService, and returns a JSON response with all parsed homeowners.
+     * Delegates CSV file processing to the ParsingService and returns the result
+     * as a JSON response.
      *
      * @param StoreHomeOwnersRequest $request Validated request containing CSV file
      * @param ParsingService $parser Service for parsing homeowner names
@@ -30,41 +30,15 @@ class HomeownerParserController extends Controller
     {
         $file = $request->file('csv_file');
 
-        if (!$file || !$file->isValid()) {
+        if (!$file) {
             return response()->json([
                 'success' => false,
-                'error' => 'Invalid CSV file upload'
+                'error' => 'No CSV file provided'
             ], 400);
         }
 
-        $homeowners = [];
+        $result = $parser->parseCsvFile($file);
 
-        $handle = fopen($file->getPathname(), 'r');
-        if ($handle === false) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Unable to read CSV file'
-            ], 400);
-        }
-
-        try {
-            // Skip the header row
-            fgetcsv($handle);
-
-            while (($row = fgetcsv($handle)) !== false) {
-                $name = trim($row[0] ?? '');
-                if ($name !== '') {
-                    array_push($homeowners, ...$parser->parseHomeowner($name));
-                }
-            }
-        } finally {
-            fclose($handle);
-        }
-
-        return response()->json([
-            'success' => true,
-            'count' => count($homeowners),
-            'homeowners' => $homeowners
-        ]);
+        return response()->json($result);
     }
 }

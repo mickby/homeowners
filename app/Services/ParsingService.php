@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
@@ -20,6 +21,55 @@ class ParsingService
      * Valid title patterns for homeowner names.
      */
     private const VALID_TITLES = 'Mr|Mrs|Ms|Dr|Prof|Mister';
+
+    /**
+     * Parse homeowner names from a CSV file upload.
+     *
+     * Reads the uploaded CSV file, validates it, and processes each homeowner
+     * record to extract structured person data.
+     *
+     * @param UploadedFile $file The uploaded CSV file
+     * @return array{success: bool, count?: int, homeowners?: array<int, array{title: string, first_name: string|null, initial: string|null, last_name: string}>, error?: string} Result array
+     */
+    public function parseCsvFile(UploadedFile $file): array
+    {
+        if (!$file->isValid()) {
+            return [
+                'success' => false,
+                'error' => 'Invalid CSV file upload'
+            ];
+        }
+
+        $homeowners = [];
+        $handle = fopen($file->getPathname(), 'r');
+
+        if ($handle === false) {
+            return [
+                'success' => false,
+                'error' => 'Unable to read CSV file'
+            ];
+        }
+
+        try {
+            // Skip the header row
+            fgetcsv($handle);
+
+            while (($row = fgetcsv($handle)) !== false) {
+                $name = trim($row[0] ?? '');
+                if ($name !== '') {
+                    array_push($homeowners, ...$this->parseHomeowner($name));
+                }
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        return [
+            'success' => true,
+            'count' => count($homeowners),
+            'homeowners' => $homeowners
+        ];
+    }
     /**
      * Parse a homeowner name string into structured data.
      *
